@@ -1,0 +1,64 @@
+{
+  "table": [
+    {
+      "backend": "bf16",
+      "host": "A40 48 GB",
+      "placement": "resident",
+      "seconds_median": 0.7884161565452814,
+      "peak_vram_gb": 44.718462976
+    },
+    {
+      "backend": "bnb-NF4",
+      "host": "A40 48 GB",
+      "placement": "resident",
+      "seconds_median": 0.865928110666573,
+      "peak_vram_gb": 15.442235904,
+      "abs_rel_vs_ref": 0.15480516045787795,
+      "delta1_vs_ref": 0.9470422802678519,
+      "rmse_vs_ref": 0.03839245999320948,
+      "rmse_over_range": 0.01919622999660474,
+      "pearson_r_vs_ref": 0.9972039653615452
+    },
+    {
+      "backend": "GGUF Q4_K_M",
+      "host": "A40 48 GB",
+      "placement": "resident",
+      "seconds_median": 1.6213094936683774,
+      "peak_vram_gb": 17.035073536,
+      "abs_rel_vs_ref": 0.14369687520327276,
+      "delta1_vs_ref": 0.9492351933154585,
+      "rmse_vs_ref": 0.03123578310873464,
+      "rmse_over_range": 0.01561789155436732,
+      "pearson_r_vs_ref": 0.9981500935115301
+    },
+    {
+      "backend": "GGUF Q4_K_M",
+      "host": "A40 48 GB",
+      "placement": "offloaded",
+      "seconds_median": 5.402387863025069,
+      "peak_vram_gb": 2.150445568,
+      "abs_rel_vs_ref": 0.14369687520327276,
+      "delta1_vs_ref": 0.9492351933154585,
+      "rmse_vs_ref": 0.03123578310873464,
+      "rmse_over_range": 0.01561789155436732,
+      "pearson_r_vs_ref": 0.9981500935115301
+    },
+    {
+      "backend": "GGUF Q4_K_M",
+      "host": "RTX 3060 Laptop 6 GB",
+      "placement": "offloaded (no choice: every GGUF level exceeds the card)",
+      "seconds_median": 7.983374085000833,
+      "peak_vram_gb": 2.150445568
+    }
+  ],
+  "derived_ratios": {
+    "nf4_vs_bf16_time": 1.0983135029359838,
+    "nf4_vs_bf16_memory": 0.3453212582974444,
+    "gguf_vs_nf4_time": 1.8723372918570893,
+    "offload_penalty_same_card": 3.3321138771608734,
+    "laptop_vs_a40_same_offloaded_job": 1.4777491523036517
+  },
+  "reference": "bf16 on the A40",
+  "image": "15_kitten.jpg",
+  "resolution": 768
+}

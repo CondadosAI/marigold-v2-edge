@@ -122,8 +122,16 @@ def _attach_adapter(transformer, kbit: bool):
     transformer.add_adapter(
         LoraConfig(r=LORA_RANK, lora_alpha=LORA_ALPHA, target_modules=LORA_TARGET_MODULES)
     )
-    for name, param in transformer.named_parameters():
-        if "lora_" in name:
+
+    # `prepare_model_for_kbit_training` upcasts every unquantized parameter to
+    # fp32, which is right for training and wrong here. The module deliberately
+    # skipped from quantization (`transformer_blocks.0.img_mod`) is exactly the
+    # one that then receives a bf16 activation and raises
+    # "mat1 and mat2 must have the same dtype". Casting the float parameters
+    # back to the compute dtype fixes it without touching the 4-bit ones, which
+    # are uint8-backed and not floating point at all.
+    for param in transformer.parameters():
+        if param.dtype == torch.float32:
             param.data = param.data.to(COMPUTE_DTYPE)
     transformer.requires_grad_(False)
     return transformer

@@ -1,0 +1,83 @@
+[
+  {
+    "backend": "gguf",
+    "label": "Q4_K_M",
+    "image": "15_kitten.jpg",
+    "resolution": 768,
+    "runs": 5,
+    "warmup": 2,
+    "offload": true,
+    "seconds_median": 5.402387863025069,
+    "seconds_all": [
+      5.49874541349709,
+      5.9637202294543386,
+      5.402387863025069,
+      5.247946576215327,
+      5.262285294942558
+    ],
+    "peak_vram_gb": 2.150445568,
+    "abs_rel_vs_ref": 0.14369687520327257,
+    "delta1_vs_ref": 0.9492351933154585,
+    "rmse_vs_ref": 0.031235783108734635
+  },
+  {
+    "backend": "gguf",
+    "label": "Q4_K_M",
+    "image": "15_kitten.jpg",
+    "resolution": 768,
+    "runs": 5,
+    "warmup": 2,
+    "offload": false,
+    "seconds_median": 1.6213094936683774,
+    "seconds_all": [
+      1.6195706194266677,
+      1.6200285805389285,
+      1.6213094936683774,
+      1.6220150655135512,
+      1.6227247193455696
+    ],
+    "peak_vram_gb": 17.035073536,
+    "abs_rel_vs_ref": 0.14369687520327257,
+    "delta1_vs_ref": 0.9492351933154585,
+    "rmse_vs_ref": 0.031235783108734635
+  },
+  {
+    "backend": "bf16",
+    "label": "bf16",
+    "image": "15_kitten.jpg",
+    "resolution": 768,
+    "runs": 5,
+    "warmup": 2,
+    "offload": false,
+    "seconds_median": 0.7884161565452814,
+    "seconds_all": [
+      0.7890298571437597,
+      0.788068407215178,
+      0.7882699118927121,
+      0.7889901306480169,
+      0.7884161565452814
+    ],
+    "peak_vram_gb": 44.718462976
+  },
+  {
+    "backend": "nf4",
+    "label": "bnb-NF4",
+    "image": "15_kitten.jpg",
+    "resolution": 768,
+    "runs": 5,
+    "warmup": 2,
+    "offload": true,
+    "seconds_median": 0.865928110666573,
+    "seconds_all": [
+      0.8644262608140707,
+      0.865928110666573,
+      0.8648664727807045,
+      0.866223712451756,
+      0.8659656420350075
+    ],
+    "peak_vram_gb": 15.442235904,
+    "abs_rel_vs_ref": 0.15480516045787784,
+    "delta1_vs_ref": 0.9470422802678519,
+    "rmse_vs_ref": 0.03839245999320948
+  }
+]

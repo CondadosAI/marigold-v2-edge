@@ -1,0 +1,21 @@
+{
+  "backend": "gguf",
+  "label": "Q4_K_M",
+  "image": "15_kitten.jpg",
+  "resolution": 768,
+  "runs": 5,
+  "warmup": 2,
+  "offload": true,
+  "seconds_median": 5.402387863025069,
+  "seconds_all": [
+    5.49874541349709,
+    5.9637202294543386,
+    5.402387863025069,
+    5.247946576215327,
+    5.262285294942558
+  ],
+  "peak_vram_gb": 2.150445568,
+  "abs_rel_vs_ref": 0.14369687520327257,
+  "delta1_vs_ref": 0.9492351933154585,
+  "rmse_vs_ref": 0.031235783108734635
+}

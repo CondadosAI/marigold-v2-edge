@@ -79,7 +79,11 @@ def benchmark(image, backend, gguf_path, resolution, runs, warmup, reference, of
     if reference is not None:
         record.update(metrics.compare_to_reference(depth, np.load(reference)))
 
-    stem = f"{image.stem}_{runner.label}_{resolution}"
+    # Offload state changes the numbers by a factor of three, so it is part of
+    # the configuration and has to be part of the filename. Leaving it out let
+    # the resident run silently overwrite the offloaded one.
+    suffix = "" if offload else "_resident"
+    stem = f"{image.stem}_{runner.label}_{resolution}{suffix}"
     np.save(out_dir / f"{stem}.npy", depth)
     imageio.colorize(depth).save(out_dir / f"{stem}.png")
     (out_dir / f"bench_{stem}.json").write_text(json.dumps(record, indent=2))

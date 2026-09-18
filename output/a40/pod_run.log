@@ -1,0 +1,177 @@
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+=== STEP 1: environment 2026-09-18T16:54:47+00:00
+image torch: 2.13.0+cu129 on /usr/local/bin/python
+Creating virtual environment at: /workspace/venv
+Activate with: source /workspace/venv/bin/activate
+ - triton==3.8.0
+purged from venv: 16
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/constants.py:301: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+No prebuilt binary for CUDA 12.9, loading CUDA 12.8 instead. Set BNB_CUDA_VERSION to override.
+torch 2.13.0+cu129 diffusers 0.40.0 peft 0.21.0
+cuda ok: NVIDIA A40
+=== STEP 2: weights 2026-09-18T16:55:10+00:00
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/constants.py:301: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+=== GPU: NVIDIA A40 sm_86 47.7 GB total, 47.4 GB free
+=== torch 2.13.0+cu129
+=== Marigold checkpoint + prompt embeddings
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 4 files:  25%|██▌       | 1/4 [00:00<00:00,  4.89it/s]Fetching 4 files:  50%|█████     | 2/4 [00:00<00:01,  1.85it/s]Fetching 4 files:  75%|███████▌  | 3/4 [00:01<00:00,  2.06it/s]Fetching 4 files: 100%|██████████| 4/4 [00:04<00:00,  1.61s/it]Fetching 4 files: 100%|██████████| 4/4 [00:04<00:00,  1.18s/it]
+=== stock Qwen VAE
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files:  50%|█████     | 1/2 [00:00<00:00,  4.55it/s]Fetching 2 files: 100%|██████████| 2/2 [00:01<00:00,  1.15it/s]Fetching 2 files: 100%|██████████| 2/2 [00:01<00:00,  1.29it/s]
+=== GGUF Qwen-Image-Edit-2509-Q4_K_M.gguf
+     /workspace/models/gguf/Qwen-Image-Edit-2509-Q4_K_M.gguf 13065746976 bytes
+=== bf16 transformer (40.9 GB; this is the long one)
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  14%|█▍        | 1/7 [00:00<00:00,  6.82it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:03<00:05,  1.42s/it]Fetching 7 files:  57%|█████▋    | 4/7 [00:18<00:17,  5.89s/it]Fetching 7 files:  86%|████████▌ | 6/7 [00:18<00:03,  3.01s/it]Fetching 7 files: 100%|██████████| 7/7 [00:18<00:00,  2.64s/it]
+=== DONE fetch
+=== STEP 3: bf16 reference 2026-09-18T16:55:57+00:00
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/constants.py:301: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+No prebuilt binary for CUDA 12.9, loading CUDA 12.8 instead. Set BNB_CUDA_VERSION to override.
+2026-09-18 16:56:07.068 | WARNING  | marigoldedge.core.backends:load_bf16:173 - bf16 backbone is ~41 GB; every block is streamed from host RAM
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:208: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 866.27it/s]
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  80%|████████  | 4/5 [00:00<00:00, 31.35it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00, 35.95it/s]
+2026-09-18 16:56:44.768 | INFO     | marigoldedge.core.weights:split_trainables:53 - trainables: 1446 LoRA tensors (rank 128), 108 VAE-decoder tensors, 2 training-only dropped
+2026-09-18 16:56:49.623 | INFO     | marigoldedge.core.backends:load_lora_:197 - Marigold LoRA loaded: 1446 tensors, no key mismatches
+2026-09-18 16:56:49.624 | INFO     | marigoldedge.core.runner:build:71 - backend=bf16 lora_rank=128
+2026-09-18 16:56:49.624 | INFO     | marigoldedge.core.runner:build:81 - no offload: placing the backbone directly on cuda
+2026-09-18 16:56:57.718 | INFO     | marigoldedge.core.weights:load_vae_decoder_:82 - VAE decoder swapped: 108 tensors applied, 86 model keys left untouched (encoder)
+2026-09-18 16:57:03.950 | INFO     | marigoldedge.core.runner:benchmark:125 - bf16: 0.79 s median over 5 runs, peak VRAM 44.72 GB
+2026-09-18 16:57:05.205 | INFO     | marigoldedge.cli:benchmark:86 - wrote bench_15_kitten_bf16_768.json
+-rw-r--r-- 1 root root 1769600 Sep 18 16:57 /workspace/out/15_kitten_bf16_768.npy
+=== STEP 4: bitsandbytes NF4 2026-09-18T16:57:06+00:00
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/constants.py:301: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+No prebuilt binary for CUDA 12.9, loading CUDA 12.8 instead. Set BNB_CUDA_VERSION to override.
+2026-09-18 16:57:15.086 | INFO     | marigoldedge.core.backends:load_nf4:136 - loading NF4 backbone from Qwen/Qwen-Image-Edit-2509
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:208: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 1092.49it/s]
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  20%|██        | 1/5 [00:01<00:07,  1.84s/it]Loading checkpoint shards:  40%|████      | 2/5 [00:03<00:05,  1.82s/it]Loading checkpoint shards:  60%|██████    | 3/5 [00:05<00:03,  1.84s/it]Loading checkpoint shards:  80%|████████  | 4/5 [00:07<00:01,  1.80s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.22s/it]Loading checkpoint shards: 100%|██████████| 5/5 [00:07<00:00,  1.49s/it]
+2026-09-18 16:58:09.268 | INFO     | marigoldedge.core.weights:split_trainables:53 - trainables: 1446 LoRA tensors (rank 128), 108 VAE-decoder tensors, 2 training-only dropped
+2026-09-18 16:58:09.791 | INFO     | marigoldedge.core.backends:load_lora_:197 - Marigold LoRA loaded: 1446 tensors, no key mismatches
+2026-09-18 16:58:09.791 | INFO     | marigoldedge.core.runner:build:71 - backend=bnb-NF4 lora_rank=128
+2026-09-18 16:58:09.926 | INFO     | marigoldedge.core.weights:load_vae_decoder_:82 - VAE decoder swapped: 108 tensors applied, 86 model keys left untouched (encoder)
+Traceback (most recent call last):
+  File "/workspace/venv/bin/marigold-edge", line 10, in <module>
+    sys.exit(cli())
+             ^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/click/core.py", line 1631, in __call__
+    return self.main(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/click/core.py", line 1552, in main
+    rv = self.invoke(ctx)
+         ^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/click/core.py", line 2032, in invoke
+    return _process_result(sub_ctx.command.invoke(sub_ctx))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/click/core.py", line 1415, in invoke
+    return ctx.invoke(self.callback, **ctx.params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/click/core.py", line 910, in invoke
+    return callback(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/marigold-v2-edge/src/marigoldedge/cli.py", line 64, in benchmark
+    timing = runner.benchmark(rgb, runs=runs, warmup=warmup)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/marigold-v2-edge/src/marigoldedge/core/runner.py", line 114, in benchmark
+    self.predict(rgb_norm)
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/marigold-v2-edge/src/marigoldedge/core/runner.py", line 100, in predict
+    return pipeline.predict_depth(
+           ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/marigold-v2-edge/src/marigoldedge/core/pipeline.py", line 123, in predict_depth
+    return to_depth(decode(flow_step(encode(rgb, vae, generator), transformer, prompt), vae))
+                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/utils/_contextlib.py", line 124, in decorate_context
+    return func(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/marigold-v2-edge/src/marigoldedge/core/pipeline.py", line 90, in flow_step
+    velocity = transformer(
+               ^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/diffusers/utils/peft_utils.py", line 323, in wrapper
+    result = forward_fn(self, *args, **kwargs)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/diffusers/models/transformers/transformer_qwenimage.py", line 1006, in forward
+    encoder_hidden_states, hidden_states = block(
+                                           ^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/workspace/venv/lib/python3.12/site-packages/diffusers/models/transformers/transformer_qwenimage.py", line 730, in forward
+    img_mod_params = self.img_mod(temb)  # [B, 6*dim]
+                     ^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/container.py", line 253, in forward
+    input = module(input)
+            ^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1778, in _wrapped_call_impl
+    return self._call_impl(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/module.py", line 1789, in _call_impl
+    return forward_call(*args, **kwargs)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/usr/local/lib/python3.12/dist-packages/torch/nn/modules/linear.py", line 134, in forward
+    return F.linear(input, self.weight, self.bias)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+RuntimeError: mat1 and mat2 must have the same dtype, but got BFloat16 and Float
+Error: nf4 row failed (continuing)
+=== STEP 5: GGUF Q4_K_M, resident 2026-09-18T16:58:13+00:00
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/constants.py:301: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+No prebuilt binary for CUDA 12.9, loading CUDA 12.8 instead. Set BNB_CUDA_VERSION to override.
+2026-09-18 16:58:20.816 | INFO     | marigoldedge.core.backends:load_gguf:156 - loading GGUF backbone: Qwen-Image-Edit-2509-Q4_K_M.gguf (13.1 GB on disk)
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:208: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+2026-09-18 16:59:08.035 | INFO     | marigoldedge.core.weights:split_trainables:53 - trainables: 1446 LoRA tensors (rank 128), 108 VAE-decoder tensors, 2 training-only dropped
+2026-09-18 16:59:09.822 | INFO     | marigoldedge.core.backends:load_lora_:197 - Marigold LoRA loaded: 1446 tensors, no key mismatches
+2026-09-18 16:59:09.822 | INFO     | marigoldedge.core.runner:build:71 - backend=Q4_K_M lora_rank=128
+2026-09-18 16:59:09.822 | INFO     | marigoldedge.core.runner:build:81 - no offload: placing the backbone directly on cuda
+2026-09-18 16:59:13.024 | INFO     | marigoldedge.core.weights:load_vae_decoder_:82 - VAE decoder swapped: 108 tensors applied, 86 model keys left untouched (encoder)
+2026-09-18 16:59:25.064 | INFO     | marigoldedge.core.runner:benchmark:125 - Q4_K_M: 1.64 s median over 5 runs, peak VRAM 17.04 GB
+2026-09-18 16:59:26.929 | INFO     | marigoldedge.cli:benchmark:86 - wrote bench_15_kitten_Q4_K_M_768.json
+=== STEP 6: GGUF Q4_K_M, offloaded 2026-09-18T16:59:28+00:00
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/constants.py:301: FutureWarning: The `HF_HUB_ENABLE_HF_TRANSFER` environment variable is deprecated as 'hf_transfer' is not used anymore. Please use `HF_XET_HIGH_PERFORMANCE` instead to enable high performance transfer with Xet. Visit https://huggingface.co/docs/huggingface_hub/package_reference/environment_variables#hfxethighperformance for more details.
+  warnings.warn(
+No prebuilt binary for CUDA 12.9, loading CUDA 12.8 instead. Set BNB_CUDA_VERSION to override.
+2026-09-18 16:59:35.650 | INFO     | marigoldedge.core.backends:load_gguf:164 - loading GGUF backbone: Qwen-Image-Edit-2509-Q4_K_M.gguf (13.1 GB on disk)
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:208: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+2026-09-18 17:02:05.309 | INFO     | marigoldedge.core.weights:split_trainables:53 - trainables: 1446 LoRA tensors (rank 128), 108 VAE-decoder tensors, 2 training-only dropped
+2026-09-18 17:02:13.627 | INFO     | marigoldedge.core.backends:load_lora_:205 - Marigold LoRA loaded: 1446 tensors, no key mismatches
+2026-09-18 17:02:13.628 | INFO     | marigoldedge.core.runner:build:71 - backend=Q4_K_M lora_rank=128
+2026-09-18 17:02:13.869 | INFO     | marigoldedge.core.backends:offload:105 - group offloading: 1 block(s) resident, stream=False
+2026-09-18 17:02:14.424 | INFO     | marigoldedge.core.weights:load_vae_decoder_:82 - VAE decoder swapped: 108 tensors applied, 86 model keys left untouched (encoder)
+2026-09-18 17:03:25.533 | INFO     | marigoldedge.core.runner:benchmark:125 - Q4_K_M: 7.09 s median over 5 runs, peak VRAM 2.15 GB
+2026-09-18 17:03:54.117 | INFO     | marigoldedge.cli:benchmark:86 - wrote bench_15_kitten_Q4_K_M_768.json
+=== STEP 7: summary 2026-09-18T17:04:07+00:00
+Q4_K_M     offload=True     7.09 s    2.15 GB  absrel_vs_ref=0.14370
+bf16       offload=False    0.79 s   44.72 GB  absrel_vs_ref=nan
+name, driver_version, memory.total [MiB]
+NVIDIA A40, 570.195.03, 46068 MiB
+torch 2.13.0+cu129
+=== DONE 2026-09-18T17:04:12+00:00

@@ -1,0 +1,18 @@
+{
+  "backend": "bf16",
+  "label": "bf16",
+  "image": "15_kitten.jpg",
+  "resolution": 768,
+  "runs": 5,
+  "warmup": 2,
+  "offload": false,
+  "seconds_median": 0.7884161565452814,
+  "seconds_all": [
+    0.7890298571437597,
+    0.788068407215178,
+    0.7882699118927121,
+    0.7889901306480169,
+    0.7884161565452814
+  ],
+  "peak_vram_gb": 44.718462976
+}
