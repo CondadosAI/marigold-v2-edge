@@ -37,7 +37,23 @@ def abs_rel(pred: np.ndarray, target: np.ndarray, mask: np.ndarray | None = None
 
 
 def delta1(pred: np.ndarray, target: np.ndarray, mask: np.ndarray | None = None) -> float:
-    """Fraction of pixels within a 1.25x ratio of the target. Higher is better."""
+    """Fraction of pixels within a 1.25x ratio of the target. Higher is better.
+
+    **This is not the delta-1 that depth papers report, and the two must not be
+    compared.** The standard metric assumes metric depth, which is strictly
+    positive, so the ratio of prediction to target is well defined. Marigold's
+    output is affine-invariant and straddles zero, so this implementation shifts
+    both arrays by a common offset to make the ratio computable at all. The
+    offset depends on the data, which means the number is not comparable across
+    images, let alone against a published benchmark.
+
+    It is kept because it moves in the right direction and is cheap, and it is
+    written down here because the value ends up in the saved artifacts where
+    somebody could mistake it for the real thing. For judging how close two
+    depth maps are, prefer the RMSE and correlation in `compare_to_reference`;
+    the same caveat applies to `abs_rel` above, which is why the article reports
+    neither as its headline.
+    """
     if mask is None:
         mask = np.isfinite(pred) & np.isfinite(target) & (np.abs(target) > 1e-6)
     p, t = pred[mask], target[mask]
