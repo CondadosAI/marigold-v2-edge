@@ -157,6 +157,55 @@ def load_nf4(device: str = "cuda"):
     return _attach_adapter(transformer, kbit=True)
 
 
+def load_bnb_int8(device: str = "cuda"):
+    """bitsandbytes 8-bit, the other half of the library the NF4 row uses."""
+    from diffusers import BitsAndBytesConfig
+
+    logger.info("loading bitsandbytes INT8 backbone from {}", QWEN_REPO)
+    transformer = QwenImageTransformer2DModel.from_pretrained(
+        QWEN_REPO,
+        subfolder="transformer",
+        torch_dtype=COMPUTE_DTYPE,
+        quantization_config=BitsAndBytesConfig(
+            load_in_8bit=True, llm_int8_skip_modules=NF4_SKIP_MODULES
+        ),
+        device_map=device,
+    )
+    return _attach_adapter(transformer, kbit=True)
+
+
+def load_torchao(bits: int, device: str = "cuda", group_size: int = 128):
+    """torchao weight-only quantization, at 4 or 8 bits.
+
+    A third 4-bit path matters more than a third data point usually would: the
+    article's finding is that *which* 4-bit you pick costs more than the
+    decision to quantize, and that claim rests on two samples until this one
+    exists.
+
+    Weight-only and not dynamic-activation, deliberately. Activation
+    quantization changes what is being compared, and float8 is not an option
+    here at all: torchao's fp8 schemes want compute capability 8.9 and an A40
+    is 8.6.
+    """
+    from diffusers import TorchAoConfig
+    from torchao.quantization import Int4WeightOnlyConfig, Int8WeightOnlyConfig
+
+    cfg = (
+        Int4WeightOnlyConfig(group_size=group_size)
+        if bits == 4
+        else Int8WeightOnlyConfig(group_size=group_size, version=2)
+    )
+    logger.info("loading torchao INT{} backbone (group_size={})", bits, group_size)
+    transformer = QwenImageTransformer2DModel.from_pretrained(
+        QWEN_REPO,
+        subfolder="transformer",
+        torch_dtype=COMPUTE_DTYPE,
+        quantization_config=TorchAoConfig(cfg),
+        device_map=device,
+    )
+    return _attach_adapter(transformer, kbit=False)
+
+
 def load_gguf(gguf_path: Path):
     """A GGUF-quantized backbone, dequantized per layer as it runs."""
     from diffusers import GGUFQuantizationConfig

@@ -13,6 +13,10 @@ from loguru import logger
 from marigoldedge import config
 from marigoldedge.core import backends, pipeline, weights
 
+# Backends whose quantizer already put the weights on the device via device_map,
+# so applying offloading hooks on top would fight it.
+PLACED_BY_QUANTIZER = {"nf4", "bnb-int8", "torchao-int4", "torchao-int8"}
+
 
 @dataclass
 class Timing:
@@ -60,6 +64,13 @@ class MarigoldRunner:
         elif backend == "nf4":
             transformer = backends.load_nf4(device=device)
             label = "bnb-NF4"
+        elif backend == "bnb-int8":
+            transformer = backends.load_bnb_int8(device=device)
+            label = "bnb-INT8"
+        elif backend in ("torchao-int4", "torchao-int8"):
+            bits = 4 if backend.endswith("int4") else 8
+            transformer = backends.load_torchao(bits, device=device)
+            label = f"torchao-INT{bits}"
         elif backend == "bf16":
             transformer = backends.load_bf16()
             label = "bf16"
@@ -70,11 +81,12 @@ class MarigoldRunner:
         backends.load_lora_(transformer, lora_state)
         logger.info("backend={} lora_rank={}", label, rank)
 
-        # NF4 is already placed on the device by bitsandbytes. The others either
+        # The quantizers that take a device_map place the model themselves. The
+        # others either
         # stream from host RAM (a card too small to hold them) or go straight on
         # (a card that fits them). Which one is in force changes what the timing
         # measures -- PCIe bandwidth or the GPU -- so it is recorded per run.
-        if backend != "nf4":
+        if backend not in PLACED_BY_QUANTIZER:
             if offload:
                 backends.offload(transformer, device, blocks_per_group, use_stream)
             else:

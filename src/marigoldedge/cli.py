@@ -12,6 +12,8 @@ from loguru import logger
 from marigoldedge import config
 from marigoldedge.core import imageio, metrics
 
+BACKENDS = ["gguf", "nf4", "bnb-int8", "torchao-int4", "torchao-int8", "bf16"]
+
 MARIGOLD_REPO = "huawei-bayerlab/marigold-v2-0"
 
 
@@ -22,7 +24,7 @@ def cli() -> None:
 
 @cli.command()
 @click.option("--image", type=click.Path(exists=True, path_type=Path), required=True)
-@click.option("--backend", type=click.Choice(["gguf", "nf4", "bf16"]), default="gguf")
+@click.option("--backend", type=click.Choice(BACKENDS), default="gguf")
 @click.option("--gguf-path", type=click.Path(exists=True, path_type=Path), default=None)
 @click.option("--resolution", type=int, default=768, help="Long edge in pixels.")
 @click.option("--offload/--no-offload", default=True)
@@ -45,7 +47,7 @@ def predict(image: Path, backend: str, gguf_path: Path | None, resolution: int,
 
 @cli.command()
 @click.option("--image", type=click.Path(exists=True, path_type=Path), required=True)
-@click.option("--backend", type=click.Choice(["gguf", "nf4", "bf16"]), default="gguf")
+@click.option("--backend", type=click.Choice(BACKENDS), default="gguf")
 @click.option("--gguf-path", type=click.Path(exists=True, path_type=Path), default=None)
 @click.option("--resolution", type=int, default=768)
 @click.option("--runs", type=int, default=5)
