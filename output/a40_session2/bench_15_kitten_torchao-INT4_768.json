@@ -1,0 +1,21 @@
+{
+  "backend": "torchao-int4",
+  "label": "torchao-INT4",
+  "image": "15_kitten.jpg",
+  "resolution": 768,
+  "runs": 5,
+  "warmup": 2,
+  "offload": true,
+  "seconds_median": 1.2161321979947388,
+  "seconds_all": [
+    1.2179477326571941,
+    1.2177594481036067,
+    1.2161321979947388,
+    1.213006876874715,
+    1.2151068490929902
+  ],
+  "peak_vram_gb": 24.309240832,
+  "abs_rel_vs_ref": 1.4694528455709197,
+  "delta1_vs_ref": 0.3967024917822279,
+  "rmse_vs_ref": 0.4333066766198031
+}

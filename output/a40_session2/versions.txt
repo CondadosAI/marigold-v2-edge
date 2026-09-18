@@ -1,0 +1,7 @@
+torch 2.13.0+cu129
+diffusers 0.40.0
+peft 0.21.0
+transformers 5.17.0
+bitsandbytes 0.50.2
+torchao 0.18.0
+NVIDIA A40, 580.159.04

@@ -1,0 +1,21 @@
+{
+  "backend": "bnb-int8",
+  "label": "bnb-INT8",
+  "image": "15_kitten.jpg",
+  "resolution": 768,
+  "runs": 5,
+  "warmup": 2,
+  "offload": true,
+  "seconds_median": 2.3470005588606,
+  "seconds_all": [
+    2.3423175681382418,
+    2.447920149192214,
+    2.3470005588606,
+    2.341273868922144,
+    2.4662328651174903
+  ],
+  "peak_vram_gb": 24.394552832,
+  "abs_rel_vs_ref": 0.02660662615185712,
+  "delta1_vs_ref": 0.9975719705019284,
+  "rmse_vs_ref": 0.008626523649600001
+}

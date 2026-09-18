@@ -1,0 +1,11 @@
+python 3.12.3
+gpu NVIDIA A40 sm_86
+torch 2.13.0+cu129
+diffusers 0.40.0
+peft 0.21.0
+transformers 5.17.0
+bitsandbytes 0.50.2
+torchao 0.18.0
+accelerate 1.15.0
+gguf 0.19.0
+numpy 2.5.3

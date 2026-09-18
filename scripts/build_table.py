@@ -33,7 +33,9 @@ import numpy as np
 from marigoldedge.core import metrics
 
 A40 = Path("output/a40")
+A40_2 = Path("output/a40_session2")
 REFERENCE = "15_kitten_bf16_768.npy"
+REFERENCE_2 = "15_kitten_bf16_768_resident.npy"
 
 # label -> (bench json, depth npy, host, what actually happened to placement)
 ROWS = [
@@ -46,15 +48,41 @@ ROWS = [
      "15_kitten_Q4_K_M_768.npy", "A40 48 GB", "offloaded"),
 ]
 
+# Second session, same GPU model, different host and driver.
+ROWS_2 = [
+    ("torchao-INT8", "bench_15_kitten_torchao-INT8_768.json",
+     "15_kitten_torchao-INT8_768.npy"),
+    ("torchao-INT4", "bench_15_kitten_torchao-INT4_768.json",
+     "15_kitten_torchao-INT4_768.npy"),
+    ("bnb-INT8", "bench_15_kitten_bnb-INT8_768.json", "15_kitten_bnb-INT8_768.npy"),
+]
+
+
+# The second session's rows are scored against the second session's own bf16
+# run, not the first's. Both were measured on an A40 and agree to 1.3% (0.79 s
+# against 0.80 s) on different hosts with different drivers, which is a
+# reproducibility result in its own right -- but a fidelity score compares
+# arrays, and those must come from the same session to mean anything.
+SESSIONS = {"1": (A40, REFERENCE), "2": (A40_2, REFERENCE_2)}
+
 
 def fidelity(pred: np.ndarray, ref: np.ndarray) -> dict[str, float]:
     aligned = metrics.align_affine(pred, ref)
-    rmse = float(np.sqrt(np.mean((aligned - ref) ** 2)))
+    diff = aligned - ref
+    rmse = float(np.sqrt(np.mean(diff**2)))
+    span = float(ref.max() - ref.min())
+    absdiff = np.abs(diff)
+    # The distribution is heavily tailed, so a single average hides the shape.
+    # The percentiles are what show that quantization agrees almost everywhere
+    # and disagrees at depth edges.
     return {
+        "p50_abs_diff_over_range": float(np.percentile(absdiff, 50)) / span,
+        "p99_abs_diff_over_range": float(np.percentile(absdiff, 99)) / span,
+        "max_abs_diff_over_range": float(absdiff.max()) / span,
+        "fraction_over_5pct_of_range": float(np.mean(absdiff > 0.05 * span)),
         "abs_rel_vs_ref": metrics.abs_rel(aligned, ref),
-        "delta1_vs_ref": metrics.delta1(aligned, ref),
         "rmse_vs_ref": rmse,
-        "rmse_over_range": rmse / float(ref.max() - ref.min()),
+        "rmse_over_range": rmse / span,
         "pearson_r_vs_ref": float(np.corrcoef(aligned.ravel(), ref.ravel())[0, 1]),
     }
 
@@ -74,6 +102,20 @@ def main() -> None:
         }
         if npy != REFERENCE:
             row.update(fidelity(np.load(A40 / npy), ref))
+        table.append(row)
+
+    ref2 = np.load(A40_2 / REFERENCE_2)
+    for label, bench, npy in ROWS_2:
+        path = A40_2 / bench
+        if not path.exists():
+            continue
+        record = json.loads(path.read_text())
+        row = {
+            "backend": label, "host": "A40 48 GB", "placement": "resident", "session": 2,
+            "seconds_median": record["seconds_median"],
+            "peak_vram_gb": record["peak_vram_gb"],
+        }
+        row.update(fidelity(np.load(A40_2 / npy), ref2))
         table.append(row)
 
     resident = {r["backend"]: r for r in table if r["placement"] == "resident"}
@@ -100,6 +142,14 @@ def main() -> None:
         pr = f"{r['pearson_r_vs_ref']:.4f}" if "pearson_r_vs_ref" in r else "-"
         print(f"{r['backend']:<13} {r['host']:<22} {r['placement'][:11]:<11} "
               f"{r['seconds_median']:>6.2f} {r['peak_vram_gb']:>8.2f} {rr:>9} {pr:>8}")
+    print()
+    print("tail shape (fraction of range):")
+    for r in table:
+        if "p50_abs_diff_over_range" in r:
+            print(f"  {r['backend']:<13} p50={r['p50_abs_diff_over_range']:.2%} "
+                  f"p99={r['p99_abs_diff_over_range']:.2%} "
+                  f"max={r['max_abs_diff_over_range']:.1%} "
+                  f">5%: {r['fraction_over_5pct_of_range']:.2%}")
     print()
     for k, v in derived.items():
         print(f"  {k:<36} {v:.2f}x")

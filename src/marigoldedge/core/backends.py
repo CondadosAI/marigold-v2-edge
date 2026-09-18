@@ -188,13 +188,21 @@ def load_torchao(bits: int, device: str = "cuda", group_size: int = 128):
     is 8.6.
     """
     from diffusers import TorchAoConfig
-    from torchao.quantization import Int4WeightOnlyConfig, Int8WeightOnlyConfig
+    from torchao.quantization import Int8WeightOnlyConfig
+    from torchao.quantization.granularity import PerAxis
 
-    cfg = (
-        Int4WeightOnlyConfig(group_size=group_size)
-        if bits == 4
-        else Int8WeightOnlyConfig(group_size=group_size, version=2)
-    )
+    # Grouped quantization is not an option for this model. `img_in` takes the
+    # VAE's 64 latent channels, so any group size above 64 fails an assertion on
+    # that one layer. Per-axis is what actually applies to every layer here.
+    if bits == 4:
+        from torchao.quantization import IntxWeightOnlyConfig
+
+        # Int4WeightOnlyConfig needs the `mslk` kernel package, which is not
+        # published (PyPI has a 0.0.0 placeholder against a >=1.0.0 requirement).
+        # IntxWeightOnlyConfig reaches four bits without it.
+        cfg = IntxWeightOnlyConfig(weight_dtype=torch.int4, granularity=PerAxis(0))
+    else:
+        cfg = Int8WeightOnlyConfig()
     logger.info("loading torchao INT{} backbone (group_size={})", bits, group_size)
     transformer = QwenImageTransformer2DModel.from_pretrained(
         QWEN_REPO,

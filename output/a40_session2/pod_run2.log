@@ -1,0 +1,72 @@
+bash: warning: setlocale: LC_ALL: cannot change locale (en_US.UTF-8)
+=== STEP 1: environment 2026-09-18T22:30:39+00:00
+Activate with: source /workspace/venv/bin/activate
+ - triton==3.8.0
+purged
+python 3.12.3
+gpu NVIDIA A40 sm_86
+torch 2.13.0+cu129
+diffusers 0.40.0
+peft 0.21.0
+transformers 5.17.0
+bitsandbytes 0.50.2
+torchao 0.18.0
+accelerate 1.15.0
+gguf 0.19.0
+numpy 2.5.3
+=== STEP 2: weights 2026-09-18T22:30:57+00:00
+=== GPU: NVIDIA A40 sm_86 47.7 GB total, 47.4 GB free
+=== torch 2.13.0+cu129
+=== Marigold checkpoint + prompt embeddings
+Fetching 4 files:   0%|          | 0/4 [00:00<?, ?it/s]Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 4 files:  25%|██▌       | 1/4 [00:00<00:00,  3.45it/s]Fetching 4 files:  50%|█████     | 2/4 [00:00<00:00,  2.70it/s]Fetching 4 files:  75%|███████▌  | 3/4 [00:02<00:01,  1.09s/it]Fetching 4 files: 100%|██████████| 4/4 [00:12<00:00,  4.35s/it]Fetching 4 files: 100%|██████████| 4/4 [00:12<00:00,  3.01s/it]
+=== stock Qwen VAE
+Fetching 2 files:   0%|          | 0/2 [00:00<?, ?it/s]Fetching 2 files: 100%|██████████| 2/2 [00:01<00:00,  1.45it/s]Fetching 2 files: 100%|██████████| 2/2 [00:01<00:00,  1.45it/s]
+=== GGUF Qwen-Image-Edit-2509-Q4_K_M.gguf
+     /workspace/models/gguf/Qwen-Image-Edit-2509-Q4_K_M.gguf 13065746976 bytes
+=== bf16 transformer (40.9 GB; this is the long one)
+Fetching 7 files:   0%|          | 0/7 [00:00<?, ?it/s]Fetching 7 files:  43%|████▎     | 3/7 [00:03<00:04,  1.10s/it]Fetching 7 files:  57%|█████▋    | 4/7 [00:23<00:21,  7.19s/it]Fetching 7 files:  71%|███████▏  | 5/7 [00:23<00:09,  4.99s/it]Fetching 7 files:  86%|████████▌ | 6/7 [00:23<00:03,  3.51s/it]Fetching 7 files: 100%|██████████| 7/7 [00:23<00:00,  3.40s/it]
+=== DONE fetch
+=== STEP 3: bf16 reference (re-measured so this session is self-contained) 2026-09-18T22:32:05+00:00
+No prebuilt binary for CUDA 12.9, loading CUDA 12.8 instead. Set BNB_CUDA_VERSION to override.
+Failed to load /workspace/venv/lib/python3.12/site-packages/torchao/_C_cutlass_90a.abi3.so: Could not load this library: /workspace/venv/lib/python3.12/site-packages/torchao/_C_cutlass_90a.abi3.so
+Failed to load /workspace/venv/lib/python3.12/site-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so: Could not load this library: /workspace/venv/lib/python3.12/site-packages/torchao/_C_mxfp8.cpython-310-x86_64-linux-gnu.so
+/workspace/venv/lib/python3.12/site-packages/torchao/quantization/quant_api.py:1542: SyntaxWarning: invalid escape sequence '\.'
+  """Configuration class for applying different quantization configs to modules or parameters based on their fully qualified names (FQNs).
+W0918 22:32:15.220000 623 torch/utils/_pytree.py:630] <enum 'KernelPreference'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+W0918 22:32:15.342000 623 torch/utils/_pytree.py:630] <enum 'ScaleCalculationMode'> is an Enum subclass and is now natively supported by torch.compile as an opaque value type. Calling register_constant() on Enum subclasses is deprecated and will be an error in a future release.
+Unable to import `torchao` Tensor objects. This may affect loading checkpoints serialized with `torchao`
+2026-09-18 22:32:20.475 | WARNING  | marigoldedge.core.backends:load_bf16:230 - bf16 backbone is ~41 GB; every block is streamed from host RAM
+/workspace/venv/lib/python3.12/site-packages/huggingface_hub/utils/_validators.py:208: UserWarning: The `local_dir_use_symlinks` argument is deprecated and ignored in `hf_hub_download`. Downloading to a local directory does not use symlinks anymore.
+  warnings.warn(
+Warning: You are sending unauthenticated requests to the HF Hub. Please set a HF_TOKEN to enable higher rate limits and faster downloads.
+Fetching 5 files:   0%|          | 0/5 [00:00<?, ?it/s]Fetching 5 files: 100%|██████████| 5/5 [00:00<00:00, 944.49it/s]
+Loading checkpoint shards:   0%|          | 0/5 [00:00<?, ?it/s]Loading checkpoint shards:  60%|██████    | 3/5 [00:00<00:00, 27.05it/s]Loading checkpoint shards: 100%|██████████| 5/5 [00:00<00:00, 30.68it/s]
+2026-09-18 22:33:10.885 | INFO     | marigoldedge.core.weights:split_trainables:61 - trainables: 1446 LoRA tensors (rank 128), 108 VAE-decoder tensors, 2 training-only dropped
+2026-09-18 22:33:21.279 | INFO     | marigoldedge.core.backends:load_lora_:254 - Marigold LoRA loaded: 1446 tensors, no key mismatches
+2026-09-18 22:33:21.279 | INFO     | marigoldedge.core.runner:build:82 - backend=bf16 lora_rank=128
+2026-09-18 22:33:21.279 | INFO     | marigoldedge.core.runner:build:93 - no offload: placing the backbone directly on cuda
+2026-09-18 22:33:40.380 | INFO     | marigoldedge.core.weights:load_vae_decoder_:90 - VAE decoder swapped: 108 tensors applied, 86 model keys left untouched (encoder)
+2026-09-18 22:33:46.890 | INFO     | marigoldedge.core.runner:benchmark:137 - bf16: 0.80 s median over 5 runs, peak VRAM 44.72 GB
+2026-09-18 22:33:48.314 | INFO     | marigoldedge.cli:benchmark:94 - wrote bench_15_kitten_bf16_768_resident.json
+=== torchao-int8 2026-09-18T22:33:51+00:00
+Usage: marigold-edge benchmark [OPTIONS]
+Try 'marigold-edge benchmark --help' for help.
+
+Error: Invalid value for '--reference': Path '/workspace/out/15_kitten_bf16_768.npy' does not exist.
+Error: torchao-int8 row failed (continuing)
+=== torchao-int4 2026-09-18T22:33:53+00:00
+Usage: marigold-edge benchmark [OPTIONS]
+Try 'marigold-edge benchmark --help' for help.
+
+Error: Invalid value for '--reference': Path '/workspace/out/15_kitten_bf16_768.npy' does not exist.
+Error: torchao-int4 row failed (continuing)
+=== bnb-int8 2026-09-18T22:33:56+00:00
+Usage: marigold-edge benchmark [OPTIONS]
+Try 'marigold-edge benchmark --help' for help.
+
+Error: Invalid value for '--reference': Path '/workspace/out/15_kitten_bf16_768.npy' does not exist.
+Error: bnb-int8 row failed (continuing)
+=== SUMMARY 2026-09-18T22:33:59+00:00
+bf16             0.80s   44.72GB  rmse=-
+=== DONE 2026-09-18T22:33:59+00:00
