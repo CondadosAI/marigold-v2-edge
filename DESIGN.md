@@ -58,9 +58,16 @@ The paper's reference is a 32 GB GPU. We have 6 GB. That gap is the article.
 
 ## Benchmark axes
 
-- **Backbone precision**: bf16 reference (CPU offload) · Q8_0 · Q6_K · Q5_K_M ·
-  Q4_K_M · Q4_0 · Q3_K_M · Q2_K
-- **Resolution**: 512² · 768² · 1024²
+Cut down from the original sweep to the smallest set that answers the question
+(Luis, 2026-09-18: simplest first). A GGUF level sweep and a resolution sweep
+are post #3, not this one.
+
+- **On the A40 (48 GB, everything resident)**: bf16 · bnb-NF4 · GGUF Q4_K_M,
+  plus GGUF Q4_K_M *offloaded* on a card that did not need to, which separates
+  what offloading costs from what the backbone costs.
+- **On the laptop (6 GB)**: GGUF Q4_K_M only. bf16 and NF4 are not slow there,
+  they are impossible, and saying why is a row of the table.
+- **Resolution**: 768 px long edge, everywhere.
 - **Reported per cell**: seconds/image (median of N after warmup), peak VRAM,
   peak host RAM, on-disk size.
 - **Fidelity**: against the bf16 reference run on the same images, after affine
@@ -80,14 +87,24 @@ quantization costs, independent of what Marigold gets wrong to begin with.
   Lightning models are fused at quantization time. Reaching INT4 would mean
   fuse-then-requantize with deepcompressor on a 20 B model. Out of scope,
   stated in Limitations, and a candidate for a follow-up post.
-- **No TensorRT, no OpenVINO, no Innovator tags.** bitsandbytes NF4 and
-  SVDQuant are CUDA-kernel-only; no MMDiT exporter exists for a 20 B model in
-  optimum-intel or TRT at the versions pinned. Both get a Limitations
-  paragraph with that specific reason. A "why not" paragraph does not earn the
-  `openvino`/`IntelSoftwareInnovator` tags (Luis, 2026-09-12).
-- **Kaggle is not used.** Free tiers are T4/P100 — Turing/Pascal, no native
-  bf16 — so they cannot host a faithful bf16 reference for a bf16 config. The
-  3060 is Ampere and does it correctly, slowly, via CPU offload.
+- **No TensorRT, and no Innovator tags on this post.** bitsandbytes NF4 and
+  SVDQuant are CUDA-kernel-only. A "why not" paragraph does not earn the
+  `openvino`/`IntelSoftwareInnovator` tags (Luis, 2026-09-12), and nothing here
+  measures OpenVINO.
+- **OpenVINO is no longer a wall — it is post #2 (checked 2026-09-18).**
+  optimum-intel now registers `qwenimage-transformer`, `qwenimage-vae-encoder`
+  and `qwenimage-vae-decoder` as exportable, with `OVModelQwenImageTransformer`
+  and matching model patchers. There is no `OVQwenImageEditPipeline`, but
+  Marigold does not use the Edit *pipeline*: it drives the transformer and VAE
+  directly, exactly as `core/pipeline.py` does, and the transformer is the same
+  `QwenImageTransformer2DModel` class the config covers. The route is merge the
+  LoRA into bf16, export transformer + VAE to IR, run on an Intel Max via Intel
+  Tiber AI Cloud. That is where the Innovator tag gets earned with a measured
+  number, and it inherits this post's bf16 reference to compare against.
+- **The reference host is a RunPod A40, not Kaggle.** Kaggle's free tiers are
+  T4/P100 (Turing/Pascal, no native bf16) and the config is bf16, so they
+  cannot host a faithful reference. An A40 is Ampere, holds all three variants
+  resident, and costs about $0.50 for the session.
 
 ## Running scenario
 

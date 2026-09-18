@@ -25,23 +25,60 @@ RUNS=5
 WARMUP=2
 
 echo "=== STEP 1: environment $(date -Is)"
-# The image already ships torch built for this driver. Installing our own would
-# swap it for a wheel resolved against the laptop's CUDA, so torch is excluded
-# here and the lock file is deliberately not used.
-pip install -q uv 2>&1 | tail -2
-uv pip install --system -q \
+# The image already ships torch built for this driver, and the base image is a
+# PEP 668 externally-managed environment that refuses installs into it. A venv
+# with --system-site-packages solves both at once: our packages are ours, and
+# torch is inherited rather than resolved again against the laptop's CUDA.
+# uv.lock is deliberately not used here for the same reason.
+# Two traps here, both of which produce a working-looking environment that
+# cannot see the GPU. The venv must use the *image's* interpreter, or
+# --system-site-packages inherits nothing (uv defaults to its own Python and
+# the image's torch lives in 3.12's dist-packages). And torch must be
+# constrained to the version already installed, or uv resolves a fresh wheel
+# built for a newer CUDA than the host driver: it imports, reports a version,
+# and then says "driver too old" at the first CUDA call.
+SYS_PY=$(which python)
+echo "image torch: $($SYS_PY -c 'import torch;print(torch.__version__)') on $SYS_PY"
+
+uv venv --python "$SYS_PY" --system-site-packages /workspace/venv 2>&1 | tail -2
+VENV=/workspace/venv/bin
+uv pip install --python $VENV/python -q \
     "diffusers>=0.40" "transformers>=4.50" "accelerate>=1.0" "peft>=0.14" \
     "safetensors>=0.5" "gguf>=0.13" "bitsandbytes>=0.45" "huggingface-hub>=0.30" \
     "hf-transfer" "numpy>=1.26" "pillow>=10" "matplotlib>=3.9" "pandas>=2.2" \
     "click>=8.1" "loguru>=0.7" "tabulate>=0.9" "tqdm>=4.66" 2>&1 | tail -3
-uv pip install --system -q --no-deps -e . 2>&1 | tail -2
-python -c "import torch, diffusers, peft; print('torch', torch.__version__, 'diffusers', diffusers.__version__, 'peft', peft.__version__)"
+uv pip install --python $VENV/python -q --no-deps -e . 2>&1 | tail -2
+
+# uv resolves torch fresh from the default index, which ships a CUDA 13 build
+# while this host's driver is 12.8. Pinning the version does not help: the
+# version is the same, the CUDA build is not. Deleting torch from the venv is
+# what makes --system-site-packages do its job, and the nvidia-* wheels go with
+# it or they shadow the image's matching set.
+uv pip uninstall --python $VENV/python torch torchvision triton 2>&1 | tail -1
+$VENV/python - <<'PURGE'
+import shutil, sys
+from pathlib import Path
+site = Path(sys.prefix) / "lib" / f"python{sys.version_info.major}.{sys.version_info.minor}" / "site-packages"
+removed = []
+for child in site.iterdir():
+    if child.name.startswith(("nvidia", "torch", "triton")):
+        shutil.rmtree(child, ignore_errors=True) if child.is_dir() else child.unlink(missing_ok=True)
+        removed.append(child.name)
+print("purged from venv:", len(removed))
+PURGE
+
+$VENV/python -c "
+import torch, diffusers, peft
+print('torch', torch.__version__, 'diffusers', diffusers.__version__, 'peft', peft.__version__)
+assert torch.cuda.is_available(), 'torch cannot see the GPU -- wrong wheel for this driver'
+print('cuda ok:', torch.cuda.get_device_name(0))
+" || { echo "Error: environment incomplete"; exit 1; }
 
 echo "=== STEP 2: weights $(date -Is)"
-python scripts/pod_fetch.py || { echo "Error: fetch failed"; exit 1; }
+$VENV/python scripts/pod_fetch.py || { echo "Error: fetch failed"; exit 1; }
 
 echo "=== STEP 3: bf16 reference $(date -Is)"
-marigold-edge benchmark --image "$IMAGE" --backend bf16 --no-offload \
+$VENV/marigold-edge benchmark --image "$IMAGE" --backend bf16 --no-offload \
     --resolution "$RES" --runs "$RUNS" --warmup "$WARMUP" \
     || { echo "Error: bf16 row failed"; exit 1; }
 
@@ -49,12 +86,12 @@ REF="$MARIGOLD_EDGE_OUTPUT_DIR/15_kitten_bf16_${RES}.npy"
 ls -la "$REF" || { echo "Error: no reference produced"; exit 1; }
 
 echo "=== STEP 4: bitsandbytes NF4 $(date -Is)"
-marigold-edge benchmark --image "$IMAGE" --backend nf4 \
+$VENV/marigold-edge benchmark --image "$IMAGE" --backend nf4 \
     --resolution "$RES" --runs "$RUNS" --warmup "$WARMUP" --reference "$REF" \
     || echo "Error: nf4 row failed (continuing)"
 
 echo "=== STEP 5: GGUF Q4_K_M, resident $(date -Is)"
-marigold-edge benchmark --image "$IMAGE" --backend gguf --no-offload \
+$VENV/marigold-edge benchmark --image "$IMAGE" --backend gguf --no-offload \
     --gguf-path "$MARIGOLD_EDGE_MODELS_DIR/gguf/Qwen-Image-Edit-2509-Q4_K_M.gguf" \
     --resolution "$RES" --runs "$RUNS" --warmup "$WARMUP" --reference "$REF" \
     || echo "Error: gguf row failed (continuing)"
@@ -63,13 +100,13 @@ marigold-edge benchmark --image "$IMAGE" --backend gguf --no-offload \
 # to. It isolates what offloading costs from what the card costs, which is the
 # only honest way to put the laptop's number in the same table as these.
 echo "=== STEP 6: GGUF Q4_K_M, offloaded $(date -Is)"
-marigold-edge benchmark --image "$IMAGE" --backend gguf --offload \
+$VENV/marigold-edge benchmark --image "$IMAGE" --backend gguf --offload \
     --gguf-path "$MARIGOLD_EDGE_MODELS_DIR/gguf/Qwen-Image-Edit-2509-Q4_K_M.gguf" \
     --resolution "$RES" --runs "$RUNS" --warmup "$WARMUP" --reference "$REF" \
     || echo "Error: gguf offloaded row failed (continuing)"
 
 echo "=== STEP 7: summary $(date -Is)"
-python - <<'PY'
+$VENV/python - <<'PY'
 import json, pathlib
 out = pathlib.Path("/workspace/out")
 rows = []
@@ -83,7 +120,7 @@ json.dump(rows, (out / "summary.json").open("w"), indent=2)
 PY
 
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv > "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
-python -c "import torch;print('torch', torch.__version__)" >> "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
+$VENV/python -c "import torch;print('torch', torch.__version__)" >> "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
 cat "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
 
 echo "=== DONE $(date -Is)"
