@@ -27,8 +27,10 @@ DIT_PREFIX = "Diffuser."
 VAE_PREFIX = "VAE."
 
 
-def split_trainables(path: Path) -> tuple[dict[str, torch.Tensor], dict[str, torch.Tensor], int]:
-    """Return ``(lora_state_dict, vae_decoder_state_dict, lora_rank)``.
+def split_trainables(
+    path: Path,
+) -> tuple[dict[str, torch.Tensor], dict[str, torch.Tensor], int, dict[str, torch.Tensor]]:
+    """Return ``(lora_state_dict, vae_decoder_state_dict, lora_rank, training_only)``.
 
     ``lora_state_dict`` keeps PEFT's own key convention (including the
     ``.default`` adapter name) because it is loaded straight into a model that
@@ -36,10 +38,16 @@ def split_trainables(path: Path) -> tuple[dict[str, torch.Tensor], dict[str, tor
     ``load_lora_adapter`` convention would be a second, lossier path to the
     same place.
     """
+    if not path.exists():
+        raise FileNotFoundError(
+            f"Marigold checkpoint not found at {path}.\n"
+            "It is 1.85 GB and is not committed to this repository. Fetch it with:\n"
+            "    uv run marigold-edge fetch"
+        )
     raw = load_file(str(path))
     lora: dict[str, torch.Tensor] = {}
     vae: dict[str, torch.Tensor] = {}
-    dropped = 0
+    training_only: dict[str, torch.Tensor] = {}
 
     for key, tensor in raw.items():
         if key.startswith(DIT_PREFIX):
@@ -47,7 +55,7 @@ def split_trainables(path: Path) -> tuple[dict[str, torch.Tensor], dict[str, tor
         elif key.startswith(VAE_PREFIX):
             vae[key[len(VAE_PREFIX) :]] = tensor
         else:
-            dropped += 1  # iREPAStudentProjector: training-only
+            training_only[key] = tensor  # iREPAStudentProjector
 
     rank = _infer_rank(lora)
     logger.info(
@@ -55,9 +63,9 @@ def split_trainables(path: Path) -> tuple[dict[str, torch.Tensor], dict[str, tor
         len(lora),
         rank,
         len(vae),
-        dropped,
+        len(training_only),
     )
-    return lora, vae, rank
+    return lora, vae, rank, training_only
 
 
 def _infer_rank(lora: dict[str, torch.Tensor]) -> int:

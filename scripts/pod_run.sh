@@ -120,7 +120,20 @@ json.dump(rows, (out / "summary.json").open("w"), indent=2)
 PY
 
 nvidia-smi --query-gpu=name,driver_version,memory.total --format=csv > "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
-$VENV/python -c "import torch;print('torch', torch.__version__)" >> "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
+# Capture every version the reproducibility block needs, here, while the pod
+# still exists. One of these was missed the first time and the pod was gone
+# before anyone noticed, which meant the article had to say so instead.
+$VENV/python - >> "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt" <<'VERS'
+import importlib.metadata as md
+import sys
+print("python", sys.version.split()[0])
+for pkg in ("torch", "diffusers", "peft", "transformers", "bitsandbytes",
+            "accelerate", "gguf", "safetensors", "numpy"):
+    try:
+        print(pkg, md.version(pkg))
+    except md.PackageNotFoundError:
+        print(pkg, "NOT INSTALLED")
+VERS
 cat "$MARIGOLD_EDGE_OUTPUT_DIR/hardware.txt"
 
 echo "=== DONE $(date -Is)"

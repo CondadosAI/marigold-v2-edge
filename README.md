@@ -23,12 +23,18 @@ Going 4-bit costs 10% of the time and saves 65% of the memory. Picking GGUF
 over NF4 costs another 1.87x and saves nothing. Streaming from host RAM costs
 3.33x. The whole table is one A40 hour, about fifty cents.
 
-Verify that claim yourself, without a GPU and without downloading a backbone:
+Verify that claim yourself, without a GPU and without downloading the backbone.
+The checkpoint is 1.9 GB; the backbone it rides on is a separate 40.9 GB that
+only the benchmark needs.
 
 ```bash
 uv sync
-uv run marigold-edge inspect
+uv run marigold-edge fetch     # the Marigold checkpoint only, ~1.9 GB
+uv run marigold-edge inspect   # prints the anatomy, no GPU required
 ```
+
+That prints the split the post opens with: 1,446 LoRA tensors at rank 128,
+108 VAE-decoder tensors, and 2 training-only tensors, 926.0 M parameters in all.
 
 ## Layout
 
@@ -48,7 +54,14 @@ output/                  # saved artifacts; every number in the article comes fr
 
 ## Running it
 
-The whole session, on a fresh GPU host, is one script:
+To regenerate the article's table from the artifacts committed under `output/`,
+with no GPU and no downloads at all:
+
+```bash
+uv run python scripts/build_table.py
+```
+
+The whole benchmark session, on a fresh GPU host, is one script:
 
 ```bash
 scripts/pod_run.sh          # environment, weights, four rows, summary

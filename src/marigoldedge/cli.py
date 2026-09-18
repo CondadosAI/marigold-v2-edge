@@ -12,6 +12,8 @@ from loguru import logger
 from marigoldedge import config
 from marigoldedge.core import imageio, metrics
 
+MARIGOLD_REPO = "huawei-bayerlab/marigold-v2-0"
+
 
 @click.group()
 def cli() -> None:
@@ -91,6 +93,33 @@ def benchmark(image, backend, gguf_path, resolution, runs, warmup, reference, of
 
 
 @cli.command()
+def fetch() -> None:
+    """Download the Marigold checkpoint and its prompt embeddings (about 1.9 GB).
+
+    This is everything `inspect` needs and nothing else: the 20.4 B backbone is
+    a separate 40.9 GB download that only the benchmark requires. Keeping the
+    two apart is what lets a reader check the post's central claim -- that the
+    release is a LoRA over a frozen backbone -- without a GPU and without
+    fetching the backbone it is a LoRA over.
+    """
+    from huggingface_hub import snapshot_download
+
+    config.MARIGOLD_DIR.mkdir(parents=True, exist_ok=True)
+    logger.info("downloading {} to {}", MARIGOLD_REPO, config.MARIGOLD_DIR)
+    snapshot_download(
+        MARIGOLD_REPO,
+        local_dir=config.MARIGOLD_DIR,
+        allow_patterns=[
+            "depth/Log-stage2/trainables.safetensors",
+            f"qwen_text_embeddings/{config.EMBED_PREFIX}_prompt_*.pt",
+            "manifest.json",
+        ],
+        max_workers=4,
+    )
+    logger.info("done; now run: marigold-edge inspect")
+
+
+@cli.command()
 @click.option("--out-dir", type=click.Path(path_type=Path), default=config.OUTPUT_DIR)
 def inspect(out_dir: Path):
     """Print what is inside the Marigold checkpoint, without loading a backbone.
@@ -101,15 +130,25 @@ def inspect(out_dir: Path):
     """
     from marigoldedge.core import weights
 
-    lora, vae_decoder, rank = weights.split_trainables(config.TRAINABLES)
+    lora, vae_decoder, rank, training_only = weights.split_trainables(config.TRAINABLES)
     targets = sorted({k.split(".lora_")[0].split(".")[-1] for k in lora if ".lora_" in k})
+
+    def millions(d):
+        return round(sum(t.numel() for t in d.values()) / 1e6, 1)
+
+    total = millions(lora) + millions(vae_decoder) + millions(training_only)
     summary = {
         "lora_tensors": len(lora),
         "lora_rank": rank,
         "lora_target_modules": targets,
+        "lora_params_millions": millions(lora),
         "vae_decoder_tensors": len(vae_decoder),
-        "lora_params_millions": round(sum(t.numel() for t in lora.values()) / 1e6, 1),
-        "vae_params_millions": round(sum(t.numel() for t in vae_decoder.values()) / 1e6, 1),
+        "vae_params_millions": millions(vae_decoder),
+        "training_only_tensors": len(training_only),
+        "training_only_params_millions": millions(training_only),
+        "total_tensors": len(lora) + len(vae_decoder) + len(training_only),
+        "total_params_millions": round(total, 1),
+        "lora_share_of_params": round(millions(lora) / total, 4),
     }
     out_dir.mkdir(parents=True, exist_ok=True)
     (out_dir / "checkpoint_anatomy.json").write_text(json.dumps(summary, indent=2))

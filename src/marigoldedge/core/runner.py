@@ -66,7 +66,7 @@ class MarigoldRunner:
         else:
             raise ValueError(f"unknown backend: {backend}")
 
-        lora_state, vae_decoder, rank = weights.split_trainables(config.TRAINABLES)
+        lora_state, vae_decoder, rank, _ = weights.split_trainables(config.TRAINABLES)
         backends.load_lora_(transformer, lora_state)
         logger.info("backend={} lora_rank={}", label, rank)
 
