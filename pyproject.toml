@@ -29,7 +29,7 @@ dependencies = [
 marigold-edge = "marigoldedge.cli:cli"
 
 [dependency-groups]
-dev = ["ruff>=0.6", "jupyterlab>=4.2"]
+dev = ["ruff>=0.6", "jupyterlab>=4.2", "pytest>=8.0"]
 
 [build-system]
 requires = ["hatchling"]
@@ -38,9 +38,12 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["src/marigoldedge"]
 
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
 [tool.ruff]
 line-length = 100
-src = ["src"]
+src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E", "F", "UP", "B", "SIM", "I"]

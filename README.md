@@ -39,6 +39,7 @@ That prints the split the post opens with: 1,446 LoRA tensors at rank 128,
 ## Layout
 
 ```
+tests/                   # uv run pytest — no GPU, no downloads, no network
 src/marigoldedge/
 ├── config.py            # project-root-aware paths, env-overridable
 ├── cli.py               # predict / benchmark / inspect
