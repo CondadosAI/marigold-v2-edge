@@ -42,21 +42,13 @@
       "rmse_vs_ref": 0.03123578310873464,
       "rmse_over_range": 0.01561789155436732,
       "pearson_r_vs_ref": 0.9981500935115301
-    },
-    {
-      "backend": "GGUF Q4_K_M",
-      "host": "RTX 3060 Laptop 6 GB",
-      "placement": "offloaded (no choice: every GGUF level exceeds the card)",
-      "seconds_median": 7.983374085000833,
-      "peak_vram_gb": 2.150445568
     }
   ],
   "derived_ratios": {
     "nf4_vs_bf16_time": 1.0983135029359838,
     "nf4_vs_bf16_memory": 0.3453212582974444,
     "gguf_vs_nf4_time": 1.8723372918570893,
-    "offload_penalty_same_card": 3.3321138771608734,
-    "laptop_vs_a40_same_offloaded_job": 1.4777491523036517
+    "offload_penalty_same_card": 3.3321138771608734
   },
   "reference": "bf16 on the A40",
   "image": "15_kitten.jpg",

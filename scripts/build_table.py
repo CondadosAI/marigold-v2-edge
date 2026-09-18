@@ -1,6 +1,11 @@
 #!/usr/bin/env python3
 """Turn the raw per-run JSON into the one table the article publishes.
 
+Every row is measured on one rented A40, so every number in the article is
+reproducible by anyone for about fifty cents. Nothing here depends on the
+author's laptop, which is the point: a latency that only one machine can
+produce is an anecdote.
+
 Two corrections happen here rather than in the benchmark, because both were
 only visible once every row existed.
 
@@ -28,7 +33,6 @@ import numpy as np
 from marigoldedge.core import metrics
 
 A40 = Path("output/a40")
-LAPTOP = Path("output")
 REFERENCE = "15_kitten_bf16_768.npy"
 
 # label -> (bench json, depth npy, host, what actually happened to placement)
@@ -72,19 +76,6 @@ def main() -> None:
             row.update(fidelity(np.load(A40 / npy), ref))
         table.append(row)
 
-    # The laptop row is measured where it means something. Its depth map is not
-    # compared numerically: it is the same file, the same weights and the same
-    # seed as the offloaded A40 row, which is exactly why it is worth saying
-    # that the two A40 GGUF runs came out bit-identical.
-    laptop = json.loads((LAPTOP / "bench_15_kitten_Q4_K_M_768.json").read_text())
-    table.append({
-        "backend": "GGUF Q4_K_M",
-        "host": "RTX 3060 Laptop 6 GB",
-        "placement": "offloaded (no choice: every GGUF level exceeds the card)",
-        "seconds_median": laptop["seconds_median"],
-        "peak_vram_gb": laptop["peak_vram_gb"],
-    })
-
     resident = {r["backend"]: r for r in table if r["placement"] == "resident"}
     off = next(r for r in table if r["placement"] == "offloaded")
     derived = {
@@ -96,7 +87,6 @@ def main() -> None:
         / resident["bnb-NF4"]["seconds_median"],
         "offload_penalty_same_card": off["seconds_median"]
         / resident["GGUF Q4_K_M"]["seconds_median"],
-        "laptop_vs_a40_same_offloaded_job": laptop["seconds_median"] / off["seconds_median"],
     }
 
     out = {"table": table, "derived_ratios": derived,

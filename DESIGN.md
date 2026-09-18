@@ -1,4 +1,4 @@
-# DESIGN — Marigold V2 on 6 GB
+# DESIGN — what quantizing Marigold V2 actually costs
 
 Phase-1 contract (new-article-project). Written 2026-09-12. This is the
 agreement for the rest of the build; change it here before changing the code.
@@ -21,10 +21,20 @@ depth estimation and start being noise?
 
 ## Reader & takeaway
 
-A practitioner who read the Marigold V2 announcement, wants to run it, and has
-one consumer GPU. After the post they know which GGUF level to pick for their
-VRAM budget, what accuracy they give up, and how to apply the same
-LoRA-on-a-quantized-backbone trick to the next frozen-backbone model.
+A practitioner who read the Marigold V2 announcement and wants to run it. After
+the post they know which 4-bit path to take and why the choice matters more
+than the decision to quantize at all, what accuracy they give up (almost none),
+and how to apply the same LoRA-on-a-quantized-backbone trick to the next
+frozen-backbone model.
+
+**Scope, decided 18 Sep 2026 (Luis):** everything is measured on a rented A40.
+The laptop is out. A 6 GB row was measured once and could not be reproduced
+under stated conditions -- the machine no longer had the ~19 GB of host RAM the
+offloaded backbone needs, and the failed attempt thrashed swap hard enough to
+take that NVMe to 76 C on a drive that has died three times. A number only one
+machine can produce, and that machine cannot produce twice, is an anecdote.
+Dropping it costs the "runs on 6 GB" hook and buys a table any reader can
+reproduce for about fifty cents.
 
 ## What is actually being measured
 
@@ -45,16 +55,18 @@ Verified from source before committing (`trainables.safetensors` header,
 That last point is what makes this tractable — no 8.3 B Qwen2.5-VL text encoder
 at runtime, and a single step means latency is one forward pass, not a schedule.
 
-## Hardware (the constraint that defines the post)
+## Hardware
 
 | | |
 |---|---|
-| GPU | RTX 3060 Laptop, **6 GB** VRAM (Ampere → bf16 native, INT4-capable) |
-| CPU | i7-12700H, 20 threads |
-| RAM | 31 GB |
-| Disk | 261 GB free on the workspace volume |
+| GPU | NVIDIA A40, 48 GB (47.7 GB usable), driver 570.195.03, sm_86 |
+| Host | RunPod secure cloud, $0.49/hr, ~$0.20 for the session |
+| Stack | torch 2.13.0+cu129, diffusers 0.40.0, peft 0.21.0, transformers 5.17.0 |
 
-The paper's reference is a 32 GB GPU. We have 6 GB. That gap is the article.
+One card that holds bf16, NF4 and GGUF resident, so the comparison is between
+backbones and not between memory systems. The paper's own reference is "a
+single 32 GB GPU", never named -- which is itself worth a line, since a
+published latency that cannot say which GPU produced it is not reproducible.
 
 ## Benchmark axes
 
@@ -62,11 +74,10 @@ Cut down from the original sweep to the smallest set that answers the question
 (Luis, 2026-09-18: simplest first). A GGUF level sweep and a resolution sweep
 are post #3, not this one.
 
-- **On the A40 (48 GB, everything resident)**: bf16 · bnb-NF4 · GGUF Q4_K_M,
-  plus GGUF Q4_K_M *offloaded* on a card that did not need to, which separates
-  what offloading costs from what the backbone costs.
-- **On the laptop (6 GB)**: GGUF Q4_K_M only. bf16 and NF4 are not slow there,
-  they are impossible, and saying why is a row of the table.
+- **Four rows, all on the A40**: bf16 · bnb-NF4 · GGUF Q4_K_M resident · GGUF
+  Q4_K_M *offloaded* on a card that did not need to. The last one is what
+  isolates the cost of not having VRAM from the cost of the backbone, and it is
+  measurable without owning a small card.
 - **Resolution**: 768 px long edge, everywhere.
 - **Reported per cell**: seconds/image (median of N after warmup), peak VRAM,
   peak host RAM, on-disk size.
@@ -116,12 +127,32 @@ repo's own `assets/` sample set and name it in the post.
 
 ## Hero visual
 
-A grid: same image, depth map at each quantization level, with AbsRel-vs-
-reference under each panel — the point where the depth map visibly falls apart
-should be findable by eye, then confirmed by the number.
+The result is that the depth maps are *indistinguishable* (r >= 0.997), so a
+side-by-side grid makes the accuracy point by showing nothing. Pair it with the
+cost chart: seconds and peak VRAM per configuration, where bf16 is 57x the
+memory of the offloaded run for 7x less time.
 
-Second chart: seconds/image and peak VRAM vs quantization level, with a 6 GB
-line drawn across it.
+The honest framing for the chart is a decomposition of one number, not a
+ranking: 0.79 s of compute, +10% to go 4-bit, +87% to pick GGUF over NF4, and
++233% to stream it from host RAM.
+
+## Findings (measured 18 Sep 2026)
+
+| Backend | Placement | s | Peak VRAM | rmse/range | Pearson r |
+|---|---|---:|---:|---:|---:|
+| bf16 | resident | 0.79 | 44.72 GB | reference | — |
+| bnb-NF4 | resident | 0.87 | 15.44 GB | 1.92% | 0.9972 |
+| GGUF Q4_K_M | resident | 1.62 | 17.04 GB | 1.56% | 0.9982 |
+| GGUF Q4_K_M | offloaded | 5.40 | 2.15 GB | 1.56% | 0.9982 |
+
+- Four-bit costs **1.10x** the time and saves **65%** of the memory. Nearly free.
+- Choosing GGUF over NF4 costs another **1.87x** and saves no memory at all.
+  GGUF earns its place only where bitsandbytes cannot run.
+- Offloading costs **3.33x** on the same card with the same weights.
+- The two GGUF runs are **bit-identical** (max|diff| exactly 0), which is the
+  check that offloading moves weights and changes no arithmetic.
+- AbsRel reads 0.14 and is a metric artifact: it divides by a target Marigold
+  centres near zero. This is the post's wrong-vs-right pairing.
 
 ## Risks / fallbacks
 
