@@ -1,0 +1,39 @@
+{
+  "source": "huawei-bayerlab/marigold-v2-0 :: depth/Log-stage2/trainables.safetensors",
+  "file_bytes": 1853909694,
+  "sha256_expected": "3edec69490ba8e8fdc8d63e130f93cb93f514360d415a22701250b2535056892",
+  "total_tensors": 1556,
+  "total_params_millions": 926.0,
+  "parts": {
+    "lora": {
+      "tensors": 1446,
+      "params_millions": 851.8,
+      "share_of_params": 0.9199,
+      "rank": 128,
+      "blocks": 60
+    },
+    "vae_decoder": {
+      "tensors": 108,
+      "params_millions": 73.3,
+      "share_of_params": 0.0792,
+      "top_level": {
+        "decoder": 106,
+        "post_quant_conv": 2
+      }
+    },
+    "training_only": {
+      "tensors": 2,
+      "params_millions": 0.9,
+      "keys": [
+        "iREPAStudentProjector.out__qwen_dit_hidden_state_-1.weight",
+        "iREPAStudentProjector.out__qwen_dit_hidden_state_-8.weight"
+      ]
+    }
+  },
+  "backbone": {
+    "repo": "Qwen/Qwen-Image-Edit-2509",
+    "params_billions": 20.4,
+    "status": "frozen \u2014 not present in this checkpoint",
+    "bf16_transformer_bytes": 40860000000
+  }
+}
