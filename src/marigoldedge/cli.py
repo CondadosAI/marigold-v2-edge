@@ -23,14 +23,16 @@ def cli() -> None:
 @click.option("--backend", type=click.Choice(["gguf", "nf4", "bf16"]), default="gguf")
 @click.option("--gguf-path", type=click.Path(exists=True, path_type=Path), default=None)
 @click.option("--resolution", type=int, default=768, help="Long edge in pixels.")
+@click.option("--offload/--no-offload", default=True)
 @click.option("--out-dir", type=click.Path(path_type=Path), default=config.OUTPUT_DIR)
-def predict(image: Path, backend: str, gguf_path: Path | None, resolution: int, out_dir: Path):
+def predict(image: Path, backend: str, gguf_path: Path | None, resolution: int,
+            offload: bool, out_dir: Path):
     """Predict one depth map and save the raw array next to a colour preview."""
     from marigoldedge.core.runner import MarigoldRunner
 
     out_dir.mkdir(parents=True, exist_ok=True)
     rgb, _ = imageio.load_rgb(image, resolution)
-    runner = MarigoldRunner.build(backend, gguf_path)
+    runner = MarigoldRunner.build(backend, gguf_path, offload=offload)
     depth = imageio.depth_to_array(runner.predict(rgb))
 
     stem = f"{image.stem}_{runner.label}_{resolution}"
@@ -48,14 +50,16 @@ def predict(image: Path, backend: str, gguf_path: Path | None, resolution: int, 
 @click.option("--warmup", type=int, default=2)
 @click.option("--reference", type=click.Path(exists=True, path_type=Path), default=None,
               help="A .npy from the bf16 run, to score fidelity against.")
+@click.option("--offload/--no-offload", default=True,
+              help="Stream the backbone from host RAM. Off when the card fits it.")
 @click.option("--out-dir", type=click.Path(path_type=Path), default=config.OUTPUT_DIR)
-def benchmark(image, backend, gguf_path, resolution, runs, warmup, reference, out_dir):
+def benchmark(image, backend, gguf_path, resolution, runs, warmup, reference, offload, out_dir):
     """Time one configuration and, given a reference, score how far it drifted."""
     from marigoldedge.core.runner import MarigoldRunner
 
     out_dir.mkdir(parents=True, exist_ok=True)
     rgb, _ = imageio.load_rgb(image, resolution)
-    runner = MarigoldRunner.build(backend, gguf_path)
+    runner = MarigoldRunner.build(backend, gguf_path, offload=offload)
 
     timing = runner.benchmark(rgb, runs=runs, warmup=warmup)
     depth = imageio.depth_to_array(runner.predict(rgb))
@@ -67,6 +71,7 @@ def benchmark(image, backend, gguf_path, resolution, runs, warmup, reference, ou
         "resolution": resolution,
         "runs": runs,
         "warmup": warmup,
+        "offload": offload,
         "seconds_median": timing.median,
         "seconds_all": timing.seconds,
         "peak_vram_gb": timing.peak_vram_gb,

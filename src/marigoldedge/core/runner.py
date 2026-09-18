@@ -44,7 +44,7 @@ class MarigoldRunner:
     @classmethod
     def build(cls, backend: str, gguf_path: Path | None = None, device: str = "cuda",
               blocks_per_group: int = backends.DEFAULT_BLOCKS_PER_GROUP,
-              use_stream: bool = False):
+              use_stream: bool = False, offload: bool = True):
         """Load every piece. The LoRA and the decoder are identical across backends.
 
         Order matters: the backbone is loaded on the host, the LoRA is written
@@ -70,9 +70,16 @@ class MarigoldRunner:
         backends.load_lora_(transformer, lora_state)
         logger.info("backend={} lora_rank={}", label, rank)
 
-        # NF4 is already placed on the device by bitsandbytes; the others stream.
+        # NF4 is already placed on the device by bitsandbytes. The others either
+        # stream from host RAM (a card too small to hold them) or go straight on
+        # (a card that fits them). Which one is in force changes what the timing
+        # measures -- PCIe bandwidth or the GPU -- so it is recorded per run.
         if backend != "nf4":
-            backends.offload(transformer, device, blocks_per_group, use_stream)
+            if offload:
+                backends.offload(transformer, device, blocks_per_group, use_stream)
+            else:
+                logger.info("no offload: placing the backbone directly on {}", device)
+                transformer.to(device)
 
         vae = AutoencoderKLQwenImage.from_pretrained(
             str(config.QWEN_VAE_DIR), torch_dtype=torch.bfloat16
